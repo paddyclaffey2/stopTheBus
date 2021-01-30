@@ -1,0 +1,16 @@
+
+<ng-container
+  *ngIf="rooms && rooms.length; then isRooms; else isNoRooms">
+</ng-container>
+
+<ng-template #isRooms>
+    <div>
+      Welcome back, friend.
+      Rooms list
+    </div>
+  </ng-template>
+  <ng-template #isNoRooms>
+    <div>
+        There are no rooms available, please create one.
+    </div>
+  </ng-template>
