@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { Store } from '@ngrx/store';
-import { ActionAppSetUser, } from 'src/app/state/app.actions';
+import { Store } from '@ngxs/store';
+import { SetUser } from 'src/app/state/app.actions';
 import { User } from '../model';
 
 @Component({
@@ -9,18 +9,18 @@ import { User } from '../model';
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css']
 })
-export class HomeComponent implements OnInit{
+export class HomeComponent implements OnInit {
 
   constructor(
     private store: Store,
-    private route: Router,) {
+    private route: Router) {
   }
 
   public ngOnInit(): void {
   }
-  
+
   public createUser(user: User) {
-    this.store.dispatch(new ActionAppSetUser({ user }));
+    this.store.dispatch(new SetUser(user));
     this.route.navigate(['lobby']);
   }
 

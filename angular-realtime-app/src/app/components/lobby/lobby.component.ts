@@ -1,11 +1,12 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { Subject } from 'rxjs';
+import { Select } from '@ngxs/store';
+import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { SocketioService } from 'src/app/services/socketio.service';
-import { AppEffects } from 'src/app/state/app.effects';
-import { IRoom } from '../model';
+import { AppState } from 'src/app/state/app-state';
+import { IRoom, User } from '../model';
 
 @Component({
   selector: 'lobby',
@@ -13,28 +14,34 @@ import { IRoom } from '../model';
   styleUrls: ['./lobby.component.css'],
 })
 export class LobbyComponent implements OnInit, OnDestroy {
+  
+  @Select(AppState.getUser) userChange$: Observable<User>;
+  @Select(AppState.getConnect) connect$: Observable<string>;
+  @Select(AppState.getDisconnect) disconnect$: Observable<null>;
 
   rooms: IRoom[] = [];
   sub = new Subject();
 
   constructor(
-    private router: Router,
-    private store: Store,
-    private effects: AppEffects,
     private socketIoService: SocketioService,
+    private router: Router,
   ) {}
 
   ngOnInit(): void {
-    this.effects.setRooms$.pipe(takeUntil(this.sub)).subscribe(state => {
-      this.rooms = state.payload.rooms;
-      console.log('setRooms', state.payload);
-    })
-    this.effects.setUser$.pipe(takeUntil(this.sub)).subscribe(state => {
-      console.log('setUser', state.payload);
-      if (!state.payload.user || !state.payload.user.name) {
-        this.router.navigate(['home']);
+    this.userChange$.pipe(takeUntil(this.sub)).subscribe(user => {
+      if (!user) {
+        this.router.navigate(['']);
       }
-    })
+    });
+    // this.effects.setRooms$.pipe(takeUntil(this.sub)).subscribe(state => {
+    //   this.rooms = state.rooms;
+    //   console.log('setRooms', state.payload);
+    // })
+    // this.effects.setUser$.pipe(takeUntil(this.sub)).subscribe(state => {
+    //   console.log('setUser', state.payload);
+    //   if (!state.payload.user || !state.payload.user.name) {
+    //   }
+    // })
   }
 
   createRoom() {

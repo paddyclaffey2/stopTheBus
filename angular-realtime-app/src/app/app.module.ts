@@ -12,12 +12,10 @@ import { HomeComponent } from './components/home/home.component';
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CreateUserFormComponent } from './components/home/create-user-form/create-user-form.component';
-import { StoreModule } from '@ngrx/store';
-import { reducer } from './state/app.reducer';
 import { CommonModule } from '@angular/common';
-import { AppEffects } from './state/app.effects';
-import { Actions } from '@ngrx/effects';
 import { RoomListComponent } from './components/lobby/room-list/room-list.component';
+import { AppState } from './state/app-state';
+import { NgxsModule, Store } from '@ngxs/store';
 
 
 @NgModule({
@@ -39,15 +37,16 @@ import { RoomListComponent } from './components/lobby/room-list/room-list.compon
     AppRoutingModule,
     BrowserAnimationsModule,
     MaterialModule,
-    StoreModule.forRoot({reducer}),
+    NgxsModule.forRoot([
+      AppState
+    ])
   ],
   providers: [
     {
       provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,
       useValue: { appearance: "fill" },
     },
-    AppEffects,
-    Actions
+    Store,
   ],
   bootstrap: [AppComponent]
 })

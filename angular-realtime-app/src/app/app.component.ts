@@ -1,13 +1,13 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { IRoom, User } from './components/model';
 import { SocketioService } from './services/socketio.service';
-import { Socket } from 'socket.io-client';
-import { Router } from '@angular/router';
-import { ActionAppClear, ActionAppSetRooms, ActionAppSetUser } from './state/app.actions';
-import { Store } from '@ngrx/store';
-import { Subject } from 'rxjs';
+import { Store } from '@ngxs/store';
+import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { AppEffects } from './state/app.effects';
+import { AppState } from './state/app-state';
+import { Select } from '@ngxs/store';
+import { Clear } from './state/app.actions';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-root',
@@ -16,26 +16,54 @@ import { AppEffects } from './state/app.effects';
 })
 export class AppComponent implements OnInit, OnDestroy {
 
+  @Select(AppState.getUser) userChange$: Observable<User>;
+  @Select(AppState.getConnectedUser) connectedUsers$: Observable<number>;
+  @Select(AppState.getConnect) connect$: Observable<string>;
+  @Select(AppState.getDisconnect) disconnect$: Observable<null>;
+
   public isConnected = false;
   public numOfConnectedUsers = 0;
   public user: User;
 
-  private socket: Socket;
   private sub = new Subject();
 
   constructor(
     private socketIoService: SocketioService,
-    private route: Router,
     private store: Store,
-    private effects: AppEffects,
+    private route: Router,
   ) {
-    this.store.dispatch(new ActionAppClear());
+    this.store.dispatch(new Clear(null));
   }
 
   public ngOnInit(): void {
-    this.effects.setUser$.pipe(takeUntil(this.sub)).subscribe(state => {
-      this.createUser(state.payload.user);
+    this.userChange$.pipe(takeUntil(this.sub)).subscribe(user => {
+      if (user) {
+        this.createUser(user);
+        this.user = user;
+      } else {
+        this.handleDisconnect();
+      }
     });
+
+    this.connectedUsers$.pipe(takeUntil(this.sub)).subscribe(users => {
+      this.numOfConnectedUsers = users;
+    });
+
+    this.connect$.pipe(takeUntil(this.sub)).subscribe(sockeetId => {
+      if (sockeetId) {
+        this.isConnected = true;
+      }
+    });
+
+    this.disconnect$.pipe(takeUntil(this.sub)).subscribe(() => {
+      this.isConnected = false;
+      this.route.navigate(['']);
+    });
+  }
+
+  private handleDisconnect() {
+    this.route.navigate(['']);
+    this.user = null;
   }
 
   public ngOnDestroy(): void {
@@ -47,7 +75,6 @@ export class AppComponent implements OnInit, OnDestroy {
   public createUser(user: User) {
     this.user = user;
     this.connect(user);
-    this.subscribeToSocketEvents();
   }
 
   public sendName(userName: string): void {
@@ -55,28 +82,6 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   private connect(user: User): void {
-    this.socket = this.socketIoService.connect(user);
-  }
-
-  subscribeToSocketEvents(): void {
-    this.socket.on('connect', () => {
-      this.isConnected = this.socket.connected;
-      this.socket.on('connect', () => {
-        console.log(`connected with ${this.socket.id}`);
-        this.route.navigate(['lobby'])
-     });
-    });
-
-    this.socket.on('disconnect', () => {
-      this.isConnected = this.socket.connected;
-    });
-
-    this.socket.on('numberOfUserChanges', (data: number) => {
-      this.numOfConnectedUsers = data;
-    });
-
-    this.socket.on('roomList ', (rooms: IRoom[]) => {
-      this.store.dispatch(new ActionAppSetRooms({ rooms }))
-    });
+    this.socketIoService.connect(user);
   }
 }

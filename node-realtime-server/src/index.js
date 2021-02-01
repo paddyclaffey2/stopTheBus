@@ -10,20 +10,28 @@ let usersConnected = [];
 
 io.on('connection', (socket) => {
 
+  usersChanged = () => {
+    socket.emit('number-of-user-changed', usersConnected.length);
+  }
+
   socket.on('disconnect', (session) => {
-    // getClients();
-    console.log('user disconnected');
-    // socket.usersConnected
-    // connectionChanged();
+    usersConnected = usersConnected.filter(one => one.id !== socket.id);
+    console.log(usersConnected)
+    usersChanged();
   });
 
   socket.on('sendName', (data) => {
-    // socket.set('nickname', data.userName);   
     console.log('user: ' + data.userName);
+    var userNameTaken = !!usersConnected.filter(one => one.name === data.userName).length;
+    console.log('userNameTaken: ' + userNameTaken);
+    if (!userNameTaken) {
+      usersConnected.push({ name: data.userName, id: socket.id});
+    }
+    usersChanged();
+    socket.emit('confirm-name', userNameTaken);
   });
 
   socket.on('sendName', (data) => {
-    // socket.set('nickname', data.userName);   
     console.log('user: ' + data.userName);
   });
   
