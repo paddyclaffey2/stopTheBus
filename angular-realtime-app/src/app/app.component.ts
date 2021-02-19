@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { IRoom, User } from './components/model';
+import { User } from './components/model';
 import { SocketioService } from './services/socketio.service';
 import { Store } from '@ngxs/store';
 import { Observable, Subject } from 'rxjs';
@@ -17,12 +17,8 @@ import { Router } from '@angular/router';
 export class AppComponent implements OnInit, OnDestroy {
 
   @Select(AppState.getUser) userChange$: Observable<User>;
-  @Select(AppState.getConnectedUser) connectedUsers$: Observable<number>;
-  @Select(AppState.getConnect) connect$: Observable<string>;
-  @Select(AppState.getDisconnect) disconnect$: Observable<null>;
 
-  public isConnected = false;
-  public numOfConnectedUsers = 0;
+  public connectedUsers = [];
   public user: User;
 
   private sub = new Subject();
@@ -38,26 +34,10 @@ export class AppComponent implements OnInit, OnDestroy {
   public ngOnInit(): void {
     this.userChange$.pipe(takeUntil(this.sub)).subscribe(user => {
       if (user) {
-        this.createUser(user);
         this.user = user;
       } else {
-        this.handleDisconnect();
+        this.user = null;
       }
-    });
-
-    this.connectedUsers$.pipe(takeUntil(this.sub)).subscribe(users => {
-      this.numOfConnectedUsers = users;
-    });
-
-    this.connect$.pipe(takeUntil(this.sub)).subscribe(sockeetId => {
-      if (sockeetId) {
-        this.isConnected = true;
-      }
-    });
-
-    this.disconnect$.pipe(takeUntil(this.sub)).subscribe(() => {
-      this.isConnected = false;
-      this.route.navigate(['']);
     });
   }
 

@@ -13,10 +13,14 @@ import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CreateUserFormComponent } from './components/home/create-user-form/create-user-form.component';
 import { CommonModule } from '@angular/common';
-import { RoomListComponent } from './components/lobby/room-list/room-list.component';
 import { AppState } from './state/app-state';
 import { NgxsModule, Store } from '@ngxs/store';
-
+import { HttpClientModule } from '@angular/common/http';
+import { UserListComponent } from './components/user-list/user-list.component';
+import { CreateCategoryFormComponent } from './components/lobby/create-category-form/create-category-form.component';
+import { MDBBootstrapModule } from 'angular-bootstrap-md';
+import { RoundFormComponent } from './components/game/round-form/round-form.component';
+import { CatergoryInputComponent } from './components/game/catergory-input/catergory-input.component';
 
 @NgModule({
   declarations: [
@@ -26,7 +30,10 @@ import { NgxsModule, Store } from '@ngxs/store';
     HomeComponent,
     ToolbarComponent,
     CreateUserFormComponent,
-    RoomListComponent,
+    UserListComponent,
+    CreateCategoryFormComponent,
+    RoundFormComponent,
+    CatergoryInputComponent,
   ],
   imports: [
     BrowserModule,
@@ -39,7 +46,9 @@ import { NgxsModule, Store } from '@ngxs/store';
     MaterialModule,
     NgxsModule.forRoot([
       AppState
-    ])
+    ]),
+    HttpClientModule,
+    MDBBootstrapModule.forRoot(),
   ],
   providers: [
     {

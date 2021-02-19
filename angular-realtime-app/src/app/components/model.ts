@@ -10,8 +10,23 @@ export class User {
     }
 }
 
-export interface IRoom {
+export interface IGame {
+    categoryInPlay: string;
+    allCategories: string[];
+    playedCategories: { name: string, scores: IScore[]}[];
+
+
+}
+
+export interface IScore {
     name: string;
-    maxCapacity: number;
+    score: number;
+}
+
+export interface ICategory {
+    name: string;
     currentCapacity: number;
 }
+
+
+

@@ -1,0 +1,15 @@
+
+mat-card {
+    overflow-y: auto;
+    height: 500px;
+    margin-top: 20px;
+}
+
+.flex {
+    display: flex;
+    justify-content: center;
+}
+
+mat-form-field {
+    padding-right: 20px;
+}

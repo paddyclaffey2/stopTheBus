@@ -1,13 +1,18 @@
 import { Injectable } from '@angular/core';
 import { State, Action, StateContext, Selector } from '@ngxs/store';
-import { IRoom, User } from '../components/model';
-import { SetUser, Clear, SetRooms, Connect, Disconnect, ConnectedUsers } from './app.actions';
+import { IScore, User } from '../components/model';
+import { SetUser, Clear, Connect, Disconnect, ConnectedUsers, SetAdmin, SetAllCategories, SetLetterInPlay, SetPlayedLetters, SetEventStopRound } from './app.actions';
 
 export interface AppStateModel {
   user: User,
   socketId: string,
-  rooms: IRoom[],
-  connectedUsers: number,
+  connectedUsers: string[],
+  admin: string,
+  letterInPlay: string;
+  allCategories: string[];
+  playedLetters: { name: string, scores: IScore[] }[];
+
+  eventStopRound: any,
 }
 
 @State<AppStateModel>({
@@ -15,8 +20,14 @@ export interface AppStateModel {
   defaults: {
     user: null,
     socketId: null,
-    rooms: [],
-    connectedUsers: 0,
+    connectedUsers: [],
+    admin: null,
+
+    letterInPlay:  null,
+    allCategories: null,
+    playedLetters: null,
+
+    eventStopRound: null,
   }
 })
 @Injectable()
@@ -24,27 +35,47 @@ export class AppState {
 
   @Selector()
   static getUser(state: AppStateModel) {
-      return state.user;
+    return state.user;
   }
 
   @Selector()
   static getConnect(state: AppStateModel) {
-      return state.socketId;
+    return state.socketId;
   }
 
   @Selector()
   static getDisconnect(state: AppStateModel) {
-      return;
-  }
-
-  @Selector()
-  static getRooms(state: AppStateModel) {
-      return state.rooms;
+    return;
   }
 
   @Selector()
   static getConnectedUser(state: AppStateModel) {
-      return state.connectedUsers;
+    return state.connectedUsers;
+  }
+
+  @Selector()
+  static getAdmin(state: AppStateModel) {
+    return state.admin;
+  }
+
+  @Selector()
+  static getLettterInPlay(state: AppStateModel) {
+    return state.letterInPlay;
+  }
+
+  @Selector()
+  static getAllCategories(state: AppStateModel) {
+    return state.allCategories;
+  }
+
+  @Selector()
+  static getPlayedLetters(state: AppStateModel) {
+    return state.playedLetters;
+  }
+
+  @Selector()
+  static getEventStopRound(state: AppStateModel) {
+    return state.eventStopRound;
   }
 
   @Action(SetUser)
@@ -61,18 +92,13 @@ export class AppState {
     ctx.setState({
       user: null,
       socketId: null,
-      rooms: null,
-      connectedUsers: 0,
+      connectedUsers: [],
+      admin: null,
+      letterInPlay: null,
+      allCategories: null,
+      playedLetters: null,
+      eventStopRound: null,
     })
-  }
-
-  @Action(SetRooms)
-  setRooms(ctx: StateContext<AppStateModel>, { payload }: SetRooms) {
-    const state = ctx.getState();
-    ctx.setState({
-      ...state,
-      rooms: payload,
-    });
   }
 
   @Action(ConnectedUsers)
@@ -99,6 +125,42 @@ export class AppState {
     ctx.setState({
       ...state,
       socketId: null,
+    });
+  }
+
+  @Action(SetAdmin)
+  setAdmin(ctx: StateContext<AppStateModel>, { payload }: SetAdmin) {
+    const state = ctx.getState();
+    ctx.setState({
+      ...state,
+      admin: payload,
+    });
+  }
+
+  @Action(SetLetterInPlay)
+  setLetterInPlay(ctx: StateContext<AppStateModel>, { payload }: SetLetterInPlay) {
+    const state = ctx.getState();
+    ctx.setState({
+      ...state,
+      letterInPlay: payload,
+    });
+  }
+
+  @Action(SetAllCategories)
+  setAllCategories(ctx: StateContext<AppStateModel>, { payload }: SetAllCategories) {
+    const state = ctx.getState();
+    ctx.setState({
+      ...state,
+      allCategories: payload,
+    });
+  }
+
+  @Action(SetEventStopRound)
+  setEventStopRound(ctx: StateContext<AppStateModel>, { payload }: SetEventStopRound) {
+    const state = ctx.getState();
+    ctx.setState({
+      ...state,
+      eventStopRound: payload,
     });
   }
 }

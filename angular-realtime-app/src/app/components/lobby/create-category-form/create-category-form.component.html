@@ -1,0 +1,38 @@
+<mat-card class="example-card scrollable-content">
+    <mat-card-title>
+        Create Catergories
+    </mat-card-title>
+
+    <mat-card-content>
+        <div class="grid-container">
+            <form [formGroup]="categoryForm" (ngSubmit)="onSubmit()">
+                <div class="flex-col" *ngIf="categoryForm">
+                    <div>
+                        <button (click)="addNewCategory()">Add</button>
+                    </div>
+                
+                    <div *ngFor="let categoryControl of categoryForm.get('category').controls; let i = index" [formGroup]="categoryControl">
+                        <div class="flex-row">
+                            <p>
+                                <mat-form-field appearance="standard">
+                                    <mat-label>Name</mat-label>
+                                    <input matInput formControlName="name" placeholder="Category Number : {{i}}" required minlength="5">
+                                    <div *ngIf="categoryControl.get('name').hasError('required') && categoryControl.get('name').touched">
+                                        This field is required</div>
+                                    <div *ngIf="categoryControl.get('name').hasError('minlength') && categoryControl.get('name').touched">
+                                        Min length 5 char</div>
+                                </mat-form-field>
+                            </p>
+                    
+                            <button class="delete-button" (click)="deleteCategory(i)">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </mat-card-content>
+
+    <mat-card-footer>
+        <button class="button" [disabled]="!categoryForm.valid" type="submit" (click)="onSubmit()">Create</button>
+    </mat-card-footer>
+</mat-card>

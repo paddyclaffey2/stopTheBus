@@ -1,0 +1,21 @@
+
+.flex-col {
+    display: flex;
+    flex-direction: column;
+}
+.flex-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.delete-button {
+    height: 30px;
+}
+
+.mat-card {
+    overflow-y: auto;
+    height: 500px;
+}
+  
+  

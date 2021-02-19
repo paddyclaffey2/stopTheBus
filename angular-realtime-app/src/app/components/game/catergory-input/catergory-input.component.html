@@ -1,0 +1,10 @@
+
+<div [formGroup]="form">
+    <mat-form-field appearance="standard">
+        <mat-label>{{name}}</mat-label>
+        <input matInput formControlName="{{name}}" placeholder="{{name}}" required >
+        <div *ngIf="control.hasError('required') && control.touched">
+            This field is required
+        </div>
+    </mat-form-field>
+</div>

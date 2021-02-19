@@ -2,10 +2,12 @@ import { Injectable } from '@angular/core';
 import { environment } from 'src/environments/environment';
 
 import { io, Socket } from 'socket.io-client';
-import { Observable } from 'rxjs';
-import { IRoom, User } from '../components/model';
+import { User } from '../components/model';
 import { Store } from '@ngxs/store';
-import { Connect, ConnectedUsers, Disconnect, SetRooms } from '../state/app.actions';
+import { Clear, Connect, ConnectedUsers, Disconnect, SetAdmin, SetAllCategories, SetEventStopRound, SetLetterInPlay } from '../state/app.actions';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { Router } from '@angular/router';
+import { NodeService } from './node-service';
 
 @Injectable({
   providedIn: 'root',
@@ -15,7 +17,12 @@ export class SocketioService {
   private socket: Socket;
   private user: User;
 
-  constructor(private store: Store) {}
+  constructor(
+    private store: Store,
+    private snackBar: MatSnackBar,
+    private route: Router,
+    private nodeService: NodeService,
+  ) {}
 
   public connect(user: User) {
     this.socket = io(environment.SOCKET_ENDPOINT);
@@ -31,79 +38,93 @@ export class SocketioService {
     return this.socket;
   }
 
-  public createRoom(): void {
-    this.socket.emit('create-room', this.user.name);
-  }
-
-  public joinRoom(): void {
-    this.socket.emit('join-room', this.user.name);
-  }
-
   subscribeToSocketEvents(): void {
     this.socket.on('connect', () => {
       this.sendName(this.user.name);
+      this.nodeService.getUsersConnected();
     });
 
     this.socket.on('disconnect', () => {
       this.store.dispatch(new Disconnect(null));
+      this.store.dispatch(new Clear(null));
+      this.route.navigate(['']);
     });
 
-    this.socket.on('confirm-name', (isNameTaken: boolean) => {
-      if (isNameTaken) {
-        console.error('user name taken');
-        this.store.dispatch(new Disconnect(null));
-      } else {
-        this.store.dispatch(new Connect(this.socket.id));
-      }
+    this.socket.on('confirm-name', () => {
+      this.store.dispatch(new Connect(this.socket.id));
     });
 
-    this.socket.on('number-of-user-changed', (data: number) => {
-      this.store.dispatch(new ConnectedUsers(data));
+    this.socket.on('users-changed', (users: string[]) => {
+      this.store.dispatch(new ConnectedUsers(users));
     });
 
-    this.socket.on('roomList ', (rooms: IRoom[]) => {
-      this.store.dispatch(new SetRooms(rooms));
+    // ADMIN 
+    this.socket.on('admin-changed', (admin: string) => {
+      this.store.dispatch(new SetAdmin(admin));
+      this.openSnackBar('Admin changed to: ' + admin);
     });
+
+    this.socket.on('invald', (error: string) => {
+      this.openSnackBar(error);
+    });
+    // ADMIN END
+
+    // GAME
+    this.socket.on('categories-ready', (catergories: string[]) => {
+      console.log('categories-ready', catergories);
+      this.store.dispatch(new SetAllCategories(catergories));
+      this.route.navigate(['game'])
+    });
+
+    this.socket.on('stop-get-answers', () => {
+      console.log('stop-get-answers');
+      this.store.dispatch(new SetEventStopRound(true));
+    });
+
+
+    // GAME END
     
-    this.socket.on('roomList ', (rooms: IRoom[]) => {
-      this.store.dispatch(new SetRooms(rooms));
+    this.socket.on('force-disconnect', (message: string) => {
+      this.openSnackBar(message);
+      this.disconnectProcedure();
     });
   }
 
   sendName(userName: string) {
-    this.socket.emit('sendName', { userName });
+    this.socket.emit('send-name', { userName });
   }
 
-
-  startGame(gameId) {
-    this.socket.emit('startGame', { gameId: gameId });
+  setAdmin(user: User) {
+    this.socket.emit('set-admin', { userName: user.name });
   }
 
-  sendGameUpdate(gameId, words) {
-    this.socket.emit('gameUpdate', { gameId: gameId, words: words });
+  setCategories(categories: string[]) {
+    this.socket.emit('set-categories', { categories });
   }
 
-  recieveJoinedPlayers() {
-    return new Observable((observer) => {
-      this.socket.on('joinGame', (message) => {
-        observer.next(message);
-      });
-    });
+  startGame() {
+    this.socket.emit('start-game');
   }
 
-  recieveStartGame() {
-    return new Observable((observer) => {
-      this.socket.on('startGame', (words) => {
-        observer.next(words);
-      });
-    });
+  startRound() {
+    this.socket.emit('start-round');
   }
 
-  recieveGameUpdate(gameId) {
-    return new Observable((observer) => {
-      this.socket.on(gameId, (words) => {
-        observer.next(words);
-      });
+  endRound(answers) {
+    this.socket.emit('end-round', { answers });
+  }
+
+  sendResults(answers) {
+    this.socket.emit('send-results', { answers });
+  }
+
+  public disconnectProcedure() {
+    this.socket.disconnect();      
+  }
+
+  private openSnackBar(message: string) {
+    this.snackBar.open(message, null, {
+      duration: 2000,
     });
   }
 }

@@ -1,13 +1,17 @@
-import { User, IRoom } from "../components/model";
+import { User } from "../components/model";
 
 export enum AppActionTypes {
   CLEAR = '[App] Clear',
   SET_USER = '[App] Set User',
-  SET_ROOMS = '[App] Set Rooms',
   GET_STATE = 'App] Get',
   CONNECT = '[App] Connect',
   DISCONNECT = '[App] Disconnect',
   CONNECTED_USER = '[App] ConnectedUser',
+  SET_ADMIN = '[App] SetAdmin',
+  SET_LETTER_IN_PLAY = '[App] SetLetterInPlay',
+  SET_ALL_CATEGORIES = '[App] SetAllCategories',
+  SET_PLAYED_LETTERS = '[App] SetPlayedLetters',
+  EVENT_STOP_ROUND = '[App] EventStopRound',
 }
 
 export class SetUser {
@@ -18,11 +22,6 @@ export class SetUser {
 export class Clear {
   static readonly type = AppActionTypes.CLEAR;
   constructor(public payload: string) { }
-}
-
-export class SetRooms {
-  static readonly type = AppActionTypes.SET_ROOMS;
-  constructor(public payload: IRoom[]) { }
 }
 
 export class Connect {
@@ -37,5 +36,30 @@ export class Disconnect {
 
 export class ConnectedUsers {
   static readonly type = AppActionTypes.CONNECTED_USER;
-  constructor(public payload: number) { }
+  constructor(public payload: string[]) { }
+}
+
+export class SetAdmin {
+  static readonly type = AppActionTypes.SET_ADMIN;
+  constructor(public payload: string) { }
+}
+
+export class SetLetterInPlay {
+  static readonly type = AppActionTypes.SET_LETTER_IN_PLAY;
+  constructor(public payload: string) { }
+}
+
+export class SetAllCategories {
+  static readonly type = AppActionTypes.SET_ALL_CATEGORIES;
+  constructor(public payload: string[]) { }
+}
+
+export class SetPlayedLetters {
+  static readonly type = AppActionTypes.SET_PLAYED_LETTERS;
+  constructor(public payload: string) { }
+}
+
+export class SetEventStopRound {
+  static readonly type = AppActionTypes.EVENT_STOP_ROUND;
+  constructor(public payload: boolean) { }
 }
