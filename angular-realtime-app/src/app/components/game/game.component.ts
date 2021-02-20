@@ -2,12 +2,13 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute } from '@angular/router';
-import { Select } from '@ngxs/store';
+import { Select, Store } from '@ngxs/store';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Socket } from 'socket.io-client';
 import { SocketioService } from 'src/app/services/socketio.service';
 import { AppState } from 'src/app/state/app-state';
+import { SetEventStopRound } from 'src/app/state/app.actions';
 import { User } from '../model';
 
 @Component({
@@ -26,6 +27,22 @@ export class GameComponent implements OnInit, OnDestroy {
   public lettterInPlay: string;
   public admin: string;
   public user: User;
+  public resultsTable: IResults;
+  public allUsers: string[];
+
+  public scoringCategory = '';
+  public isScoreSubmittedForCategory = false;
+  public showFinalcodeSubmit = false;
+  public isRoundComplete = false;
+  public isAllScoresSubmitted = false;
+  private categoriesToScore: string[] = [];
+  public roundScore = 0;
+  public usersWhoSubmittedScore: string[] = [];
+  public hasRequestedFinalScores = false;
+  
+  public scores: {
+    [key: string]: number
+  }
 
   public waitingForGameToStart = true;
   public waitingForRoundToStart = false;
@@ -39,7 +56,7 @@ export class GameComponent implements OnInit, OnDestroy {
 
   constructor(
     private socketIoService: SocketioService,
-    private route: ActivatedRoute,
+    private store: Store,
     private snackbar: MatSnackBar
   ) {}
 
@@ -60,17 +77,65 @@ export class GameComponent implements OnInit, OnDestroy {
     this.subscribeToEvents();
   }
 
+  private resetGameStatus(): void {
+    this.waitingForGameToStart = false;
+    this.waitingForRoundToStart = false;
+    this.roundInProgress = false;
+    this.roundOver = false;
+    this.gameOver = false;
+  }
+
   private subscribeToEvents() {
     this.socket.on('game-ready', () => {
-      this.waitingForGameToStart = false;
+      this.resetGameStatus();
       this.waitingForRoundToStart = true;
     });
 
     this.socket.on('begin-guessing', (letter: string) => {
       console.log('begin-guessing: ', letter);
       this.lettterInPlay = letter;
-      this.waitingForRoundToStart = false;
+      this.resetGameStatus();
       this.roundInProgress = true;
+    });
+
+    this.socket.on('all-answers-for-round-recieved', (results: IResults) => {
+      this.store.dispatch(new SetEventStopRound(null));
+      console.log('all-answers-for-round-recieved: ', results);
+      this.resultsTable = results;
+      this.allUsers = Object.keys(results);
+      this.roundInProgress = false;
+      this.roundOver = true;
+      this.roundScore = 0;
+      this.categoriesToScore = [ ...this.categories ];
+      this.usersWhoSubmittedScore = [];
+      this.showFinalcodeSubmit = false;
+      this.hasRequestedFinalScores = false;
+    });
+
+    this.socket.on('now-scoring', (category: string) => {
+      this.scoringCategory = category;
+      this.isScoreSubmittedForCategory = false;
+    });
+
+    this.socket.on('updated-score-user-list', (usersWhoSubmittedScore: string[]) => {
+      this.usersWhoSubmittedScore = usersWhoSubmittedScore;
+    });
+
+    this.socket.on('updated-score-user-list', (usersWhoSubmittedScore: string[]) => {
+      this.usersWhoSubmittedScore = usersWhoSubmittedScore;
+    });
+
+    this.socket.on('enable-score-button-true', () => {
+      this.showFinalcodeSubmit = true;
+    });
+    
+    this.socket.on('game-score-update', (scores) => {
+      this.scores = scores;
+    });
+
+    this.socket.on('game-over-over', () => {
+      this.resetGameStatus();
+      this.gameOver = true;
     });
   }
   // 
@@ -88,8 +153,52 @@ export class GameComponent implements OnInit, OnDestroy {
     this.socketIoService.startRound();
   }
 
+  public getUserAnswers(userName: string, category: string): string {
+    return this.resultsTable[userName][this.lettterInPlay].filter(answer => answer.catergoryName === category)[0].answer;
+  }
+
+  public submitAllScore(): void {
+    console.log('submitScore');
+    this.socket.emit('final-round-score-submitted', { score: this.roundScore, userName: this.user.name, letter: this.lettterInPlay });
+  }
+
+  public requestFinalScores(): void {
+    this.socket.emit('enable-score-button');
+    this.hasRequestedFinalScores = true;
+  }
+
+  public nextRound() :void {
+    this.socket.emit('next-round');
+  }
+
+  public submitCategoryScore(score: number) {
+    this.roundScore += score;
+    this.isScoreSubmittedForCategory = true;
+    this.socket.emit('category-score-submitted', { userName: this.user.name });
+  }
+
   public isAdmin(): boolean {
     return this.admin && this.user.name === this.admin;
   }
 
+  public nextCategory() :void {
+    this.socket.emit('next-category', { category: this.categoriesToScore.shift() });
+  }
+
+  public finshGame() {
+    this.socket.emit('game-over');
+  }
+}
+
+interface IResults {
+  [key: string]: { // Player Name
+    [key: string]: // letter
+      ISubmittedAnswers[]
+  }
+}
+
+export interface ISubmittedAnswers {
+  catergoryName: string,
+  answer: string,
+  score: number,
 }

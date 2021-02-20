@@ -22,7 +22,6 @@ export class UserListComponent implements OnInit, OnDestroy {
   constructor() { }
 
   ngOnInit(): void {
-
     this.connectedUsers$.pipe(takeUntil(this.sub)).subscribe(users => {
       this.connectedUsers = users;
     });

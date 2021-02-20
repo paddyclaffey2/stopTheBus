@@ -39,6 +39,7 @@ export class RoundFormComponent implements OnInit, OnDestroy{
   control8: FormControl;
   control9: FormControl;
 
+  readonly MAX_CATEGORY = 6;
   constructor(
     private formBuilder: FormBuilder,
     private socketioService: SocketioService,
@@ -65,14 +66,14 @@ export class RoundFormComponent implements OnInit, OnDestroy{
 
   endRound() {
     if (!this.answersSubmitted) {
-      this.socketioService.sendResults(this.answerForm.value);
+      this.socketioService.sendResults(this.answerForm.value, this.letter);
       this.roundInProgress = false;
     }
   }
 
   onSubmit() {
     console.log('onSubmit answers, ', this.answerForm.value);
-    this.socketioService.endRound(this.answerForm.value);
+    this.socketioService.endRound(this.answerForm.value, this.letter);
     this.roundInProgress = false;
     this.answersSubmitted = true;
   }

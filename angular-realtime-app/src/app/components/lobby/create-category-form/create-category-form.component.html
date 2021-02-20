@@ -16,11 +16,11 @@
                             <p>
                                 <mat-form-field appearance="standard">
                                     <mat-label>Name</mat-label>
-                                    <input matInput formControlName="name" placeholder="Category Number : {{i}}" required minlength="5">
+                                    <input matInput formControlName="name" placeholder="Category Number : {{i}}" required minlength="3">
                                     <div *ngIf="categoryControl.get('name').hasError('required') && categoryControl.get('name').touched">
                                         This field is required</div>
                                     <div *ngIf="categoryControl.get('name').hasError('minlength') && categoryControl.get('name').touched">
-                                        Min length 5 char</div>
+                                        Min length 3 char</div>
                                 </mat-form-field>
                             </p>
                     

@@ -9,7 +9,7 @@ import { SocketioService } from 'src/app/services/socketio.service';
 })
 export class CreateCategoryFormComponent implements OnInit {
 
-  readonly MAX_CATEGORY = 10;
+  readonly MAX_CATEGORY = 6;
 
   public categoryForm: FormGroup;
 
@@ -25,7 +25,7 @@ export class CreateCategoryFormComponent implements OnInit {
   addNewCategory(index?: string) {
     const add = this.categoryForm.get('category') as FormArray;
     add.push(this.formBuilder.group({
-      name: ['aaaaa' + index, [Validators.required, Validators.minLength(5)]],
+      name: ['', [Validators.required, Validators.minLength(3)]],
     }))
   }
 

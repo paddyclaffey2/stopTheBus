@@ -8,6 +8,7 @@ import { Clear, Connect, ConnectedUsers, Disconnect, SetAdmin, SetAllCategories,
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { NodeService } from './node-service';
+import { ISubmittedAnswers } from '../components/game/game.component';
 
 @Injectable({
   providedIn: 'root',
@@ -79,6 +80,7 @@ export class SocketioService {
     this.socket.on('stop-get-answers', () => {
       console.log('stop-get-answers');
       this.store.dispatch(new SetEventStopRound(true));
+      this.store.dispatch(new SetEventStopRound(null));
     });
 
 
@@ -110,12 +112,27 @@ export class SocketioService {
     this.socket.emit('start-round');
   }
 
-  endRound(answers) {
-    this.socket.emit('end-round', { answers });
+  endRound(answers: {}[], letterInPlay: string) {
+    this.socket.emit('end-round', { answers: this.getParsedAnswers(answers), letterInPlay });
   }
 
-  sendResults(answers) {
-    this.socket.emit('send-results', { answers });
+  private getParsedAnswers(answers): ISubmittedAnswers[] {
+    const parsedAnswers: ISubmittedAnswers[] = [];
+    const catergories = Object.keys(answers); // will be array of equal length
+    const answerList = Object.values(answers) as string[];
+    for( let i = 0; i < catergories.length; i++) {
+      parsedAnswers.push({
+        catergoryName: catergories[i],
+        answer: answerList[i],
+        score: 0,
+      })
+    }
+
+    return parsedAnswers;
+  }
+
+  sendResults(answers, letterInPlay: string) {
+    this.socket.emit('send-results', { answers: this.getParsedAnswers(answers), letterInPlay });
   }
 
   public disconnectProcedure() {
