@@ -66,6 +66,7 @@ export class RoundFormComponent implements OnInit, OnDestroy{
 
   endRound() {
     if (!this.answersSubmitted) {
+      this.answersSubmitted = true;
       this.socketioService.sendResults(this.answerForm.value, this.letter);
       this.roundInProgress = false;
     }
